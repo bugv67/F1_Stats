@@ -1,9 +1,7 @@
 import { useEffect, useState } from 'react'
 import HomePage from './pages/HomePage'
 import './App.css'
-import { getDriver } from './api/openf1'
 
-getDriver()
 
 function App() {
   const [lit, setLit] = useState(0)

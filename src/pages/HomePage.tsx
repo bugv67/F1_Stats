@@ -1,12 +1,19 @@
 import { useEffect, useState } from 'react'
 import { getDriverStandings, SEASON, type DriverStanding } from '../api/jolpica'
+import { getDriverInfo } from '../api/openf1'
 
 interface HomePageProps {
   onBack: () => void
 }
-
+interface DriverWithImage extends DriverStanding {
+  imageUrl: string
+}
+interface DriverWithImage extends DriverStanding {
+  imageUrl: string
+}
 function HomePage({ onBack }: HomePageProps) {
-  const [standings, setStandings] = useState<DriverStanding[]>([])
+  const [standings, setStandings] = useState<DriverWithImage[]>([])
+  
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
@@ -14,9 +21,22 @@ function HomePage({ onBack }: HomePageProps) {
     let isCurrent = true
 
     getDriverStandings()
-      .then((drivers) => {
-        if (isCurrent) setStandings(drivers)
+  .then(async (drivers) => {
+    const driversWithImages = await Promise.all(
+      drivers.map(async (driver) => {
+        const driverInfo = await getDriverInfo(
+          driver.Driver.permanentNumber ?? driver.Driver.code ?? ''
+        )
+
+        return {
+          ...driver,
+          imageUrl: driverInfo.headshot_url,
+        }
       })
+    )
+
+    if (isCurrent) setStandings(driversWithImages)
+  })
       .catch(() => {
         if (isCurrent) setError('Unable to load the driver standings.')
       })
@@ -78,6 +98,11 @@ function HomePage({ onBack }: HomePageProps) {
                   <tr key={standing.Driver.familyName}>
                     <td className="standings-position">{standing.position}</td>
                     <td className="driver-name">
+                    <img
+  src={standing.imageUrl}
+  alt={`${standing.Driver.givenName} ${standing.Driver.familyName}`}
+  width="80"
+/>
                       <span className="driver-number">
                         {standing.Driver.permanentNumber ?? standing.Driver.code ?? '-'}
                       </span>
