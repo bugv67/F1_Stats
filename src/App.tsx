@@ -1,11 +1,9 @@
 import { useEffect, useState } from 'react'
 import HomePage from './pages/HomePage'
 import './App.css'
-import { getCircuitImage } from './api/wikipedia'
+import { getDriver } from './api/openf1'
 
-getCircuitImage().then((url) => {
-  console.log(url)
-})
+getDriver()
 
 function App() {
   const [lit, setLit] = useState(0)
