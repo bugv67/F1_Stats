@@ -8,12 +8,14 @@ export interface OpenF1Driver {
   team_colour: string
 }
 
-export async function getDriverInfo(driverNumber: string) {
-  const response = await fetch(
-    `${API_URL}?driver_number=${driverNumber}&session_key=latest`
-  )
+export async function getDrivers() {
+  const response = await fetch(`${API_URL}?session_key=latest`)
+
+  if (!response.ok) {
+    throw new Error(`OpenF1 request failed: ${response.status}`)
+  }
 
   const data: OpenF1Driver[] = await response.json()
 
-  return data[0]
+  return data
 }

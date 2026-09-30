@@ -347,3 +347,207 @@ body {
     padding-left: 12px;
   }
 }
+/* =========================
+   Podium
+   ========================= */
+
+.podium {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 24px;
+  margin: 48px auto 72px;
+  max-width: 1000px;
+}
+
+.podium-place {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 30%;
+}
+
+.podium-card {
+  width: 100%;
+  min-height: 330px;
+  padding: 24px 20px;
+  border-top: 4px solid var(--red);
+  background: var(--white);
+  text-align: center;
+  box-shadow: 0 10px 24px rgba(21, 21, 30, 0.12);
+  position: relative;
+  z-index: 2;
+}
+
+.podium-first .podium-card {
+  min-height: 390px;
+}
+
+.podium-medal {
+  display: block;
+  font-size: 36px;
+  margin-bottom: 8px;
+}
+
+.podium-driver-image {
+  width: 150px;
+  height: 150px;
+  object-fit: contain;
+  display: block;
+  margin: 0 auto 16px;
+}
+
+.podium-first .podium-driver-image {
+  width: 180px;
+  height: 180px;
+}
+
+.podium-card h2 {
+  margin: 0;
+  font-size: 22px;
+}
+
+.podium-team {
+  margin: 8px 0 0;
+  font-size: 15px;
+  opacity: 0.7;
+}
+
+.podium-points {
+  margin: 12px 0 0;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.podium-block {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--white);
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 56px;
+  font-style: italic;
+  font-weight: 900;
+  line-height: 1;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+}
+
+.podium-block-first {
+  height: 150px;
+  background: var(--red);
+}
+
+.podium-block-second {
+  height: 105px;
+  background: var(--asphalt-light);
+}
+
+.podium-block-third {
+  height: 75px;
+  background: var(--asphalt);
+}
+
+/* =========================
+   Full standings
+   ========================= */
+
+.full-standings {
+  margin-top: 20px;
+}
+
+.full-standings-heading {
+  margin-bottom: 24px;
+  font-size: 28px;
+}
+
+.standings-position {
+  font-weight: 700;
+  font-size: 18px;
+  text-align: center;
+}
+
+.driver-name {
+  font-weight: 600;
+}
+
+.driver-number {
+  display: inline-block;
+  min-width: 32px;
+  margin-right: 10px;
+  opacity: 0.55;
+  font-size: 14px;
+}
+
+.standings-points {
+  font-weight: 700;
+}
+
+/* =========================
+   Responsive
+   ========================= */
+
+@media (max-width: 800px) {
+  .podium {
+    gap: 12px;
+    margin-top: 40px;
+  }
+
+  .podium-card {
+    padding: 18px 10px;
+    min-height: 280px;
+  }
+
+  .podium-first .podium-card {
+    min-height: 320px;
+  }
+
+  .podium-driver-image {
+    width: 110px;
+    height: 110px;
+  }
+
+  .podium-first .podium-driver-image {
+    width: 130px;
+    height: 130px;
+  }
+
+  .podium-card h2 {
+    font-size: 17px;
+  }
+
+  .podium-team {
+    font-size: 13px;
+  }
+
+  .podium-points {
+    font-size: 16px;
+  }
+}
+
+@media (max-width: 600px) {
+  .podium {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-items: end;
+  }
+
+  .podium-first {
+    grid-column: 1 / -1;
+    grid-row: 1;
+    width: 70%;
+    justify-self: center;
+  }
+
+  .podium-second {
+    grid-column: 1;
+    grid-row: 2;
+    width: 100%;
+  }
+
+  .podium-third {
+    grid-column: 2;
+    grid-row: 2;
+    width: 100%;
+  }
+}
