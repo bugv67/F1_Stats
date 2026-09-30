@@ -1,6 +1,11 @@
 import { useEffect, useState } from 'react'
 import HomePage from './pages/HomePage'
 import './App.css'
+import { getCircuitImage } from './api/wikipedia'
+
+getCircuitImage().then((url) => {
+  console.log(url)
+})
 
 function App() {
   const [lit, setLit] = useState(0)
