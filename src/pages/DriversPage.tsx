@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type CSSProperties } from 'react'
 import {
   getDriverStandings,
   SEASON,
@@ -6,26 +6,114 @@ import {
 } from '../api/jolpica'
 import { getDrivers } from '../api/openf1'
 
-interface HomePageProps {
+interface DriversPageProps {
   onBack: () => void
 }
 
 interface DriverWithImage extends DriverStanding {
   imageUrl: string
+  teamColour: string
 }
 
-function HomePage({ onBack }: HomePageProps) {
+type DriversView = 'drivers' | 'standings'
+
+const FALLBACK_TEAM_COLOUR = 'e10600'
+
+// Turns a team colour from OpenF1 (HEX without '#') into CSS variables:
+// --team-colour: the team's colour
+// --team-text: dark or white text, whichever is readable on top of that colour
+function getTeamStyle(teamColour: string): CSSProperties {
+  const colour = /^[0-9a-f]{6}$/i.test(teamColour)
+    ? teamColour
+    : FALLBACK_TEAM_COLOUR
+
+  const red = parseInt(colour.slice(0, 2), 16)
+  const green = parseInt(colour.slice(2, 4), 16)
+  const blue = parseInt(colour.slice(4, 6), 16)
+  const brightness = (red * 299 + green * 587 + blue * 114) / 1000
+
+  return {
+    '--team-colour': `#${colour}`,
+    '--team-text': brightness > 150 ? '#15151e' : '#ffffff',
+  } as CSSProperties
+}
+
+interface DriverCardProps {
+  driver: DriverWithImage
+}
+const MEDALS: Record<string, string> = { '1': '🥇', '2': '🥈', '3': '🥉' }
+
+function DriverCard({ driver }: DriverCardProps) {
+  const [flipped, setFlipped] = useState(false)
+
+  const fullName = `${driver.Driver.givenName} ${driver.Driver.familyName}`
+  const number = driver.Driver.permanentNumber ?? driver.Driver.code ?? '-'
+  const teamName = driver.Constructors[0]?.name ?? '-'
+  const medal = MEDALS[driver.position]
+
+  return (
+    <button
+      type="button"
+      className={`driver-card${flipped ? ' is-flipped' : ''}`}
+      style={getTeamStyle(driver.teamColour)}
+      aria-pressed={flipped}
+      onClick={() => setFlipped((value) => !value)}
+    >
+      <span className="driver-card-inner">
+        <span className="driver-card-face driver-card-front">
+          {medal && (
+            <span
+              className="driver-card-medal"
+              role="img"
+              aria-label={`Position ${driver.position}`}
+            >
+              {medal}
+            </span>
+          )}
+
+          {driver.imageUrl ? (
+            <img
+              src={driver.imageUrl}
+              alt={fullName}
+              className="driver-card-image"
+            />
+          ) : (
+            <span className="driver-card-image driver-card-placeholder">
+              {number}
+            </span>
+          )}
+          <span className="driver-card-name">{fullName}</span>
+          <span className="driver-card-number">{number}</span>
+          <span className="driver-card-team">{teamName}</span>
+        </span>
+
+        <span className="driver-card-face driver-card-back">
+          <span className="driver-card-back-team">{teamName}</span>
+          <span className="driver-card-stat">
+            <span className="driver-card-stat-label">Position</span>
+            <span className="driver-card-stat-value">{driver.position}</span>
+          </span>
+          <span className="driver-card-stat">
+            <span className="driver-card-stat-label">Points</span>
+            <span className="driver-card-stat-value">{driver.points}</span>
+          </span>
+        </span>
+      </span>
+    </button>
+  )
+}
+
+function DriversPage({ onBack }: DriversPageProps) {
+  const [view, setView] = useState<DriversView>('standings')
   const [standings, setStandings] = useState<DriverWithImage[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
+  // Runs once when the page mounts. Both tabs read from the same `standings`.
   useEffect(() => {
     let isCurrent = true
 
-    Promise.all([
-      getDriverStandings(),
-      getDrivers(),
-    ])
+    Promise.all([getDriverStandings(), getDrivers()])
       .then(([driverStandings, openF1Drivers]) => {
         const driversWithImages = driverStandings.map((driver) => {
           const driverNumber =
@@ -39,6 +127,7 @@ function HomePage({ onBack }: HomePageProps) {
           return {
             ...driver,
             imageUrl: driverInfo?.headshot_url ?? '',
+            teamColour: driverInfo?.team_colour ?? '',
           }
         })
 
@@ -62,17 +151,11 @@ function HomePage({ onBack }: HomePageProps) {
     }
   }, [])
 
-  const firstPlace = standings.find(
-    (standing) => standing.position === '1',
-  )
+  const firstPlace = standings.find((standing) => standing.position === '1')
+  const secondPlace = standings.find((standing) => standing.position === '2')
+  const thirdPlace = standings.find((standing) => standing.position === '3')
 
-  const secondPlace = standings.find(
-    (standing) => standing.position === '2',
-  )
-
-  const thirdPlace = standings.find(
-    (standing) => standing.position === '3',
-  )
+  const hasData = !loading && !error && standings.length > 0
 
   return (
     <div className="standings-page">
@@ -81,47 +164,80 @@ function HomePage({ onBack }: HomePageProps) {
           <span aria-hidden="true">F1</span> Stats
         </p>
 
-        <button className="back-button" onClick={onBack}>
-          Back to home
-        </button>
+        <div className="drivers-nav-actions">
+          <div
+            className="drivers-view-toggle"
+            role="group"
+            aria-label="Driver view"
+          >
+            <button
+              type="button"
+              className={view === 'drivers' ? 'is-active' : ''}
+              aria-pressed={view === 'drivers'}
+              onClick={() => setView('drivers')}
+            >
+              Drivers
+            </button>
+            <button
+              type="button"
+              className={view === 'standings' ? 'is-active' : ''}
+              aria-pressed={view === 'standings'}
+              onClick={() => setView('standings')}
+            >
+              Standings
+            </button>
+          </div>
+          <button className="back-button" onClick={onBack}>
+            Back to home
+          </button>
+        </div>
       </header>
 
       <main className="standings-content">
         <p className="standings-eyebrow">{SEASON} season</p>
-
-        <h1 className="standings-heading">Driver standings</h1>
+        <h1 className="standings-heading">
+          {view === 'standings' ? 'Driver standings' : 'Drivers'}
+        </h1>
 
         <p className="standings-summary">
-          The championship fight, position by position.
+          {view === 'standings'
+            ? 'The championship fight, position by position.'
+            : 'Hover over a card, or tap it, to see the details.'}
         </p>
 
         {loading && (
           <p className="standings-message" role="status">
-            Loading driver standings...
+            Loading drivers...
           </p>
         )}
-
         {!loading && error && (
           <p className="standings-message" role="alert">
             {error}
           </p>
         )}
-
         {!loading && !error && standings.length === 0 && (
           <p className="standings-message" role="status">
             No driver standings are available yet for {SEASON}.
           </p>
         )}
 
-        {!loading && !error && standings.length > 0 && (
+        {/* Drivers tab: grid of flip cards */}
+        {hasData && view === 'drivers' && (
+          <section className="drivers-grid" aria-label="All drivers">
+            {standings.map((driver) => (
+              <DriverCard key={driver.Driver.familyName} driver={driver} />
+            ))}
+          </section>
+        )}
+
+        {/* Standings tab: podium + full table */}
+        {hasData && view === 'standings' && (
           <>
-            {/* Podium */}
             {firstPlace && secondPlace && thirdPlace && (
               <section className="podium" aria-label="Top three drivers">
                 <div className="podium-place podium-second">
                   <div className="podium-card">
                     <span className="podium-medal">🥈</span>
-
                     {secondPlace.imageUrl && (
                       <img
                         src={secondPlace.imageUrl}
@@ -129,30 +245,21 @@ function HomePage({ onBack }: HomePageProps) {
                         className="podium-driver-image"
                       />
                     )}
-
                     <h2>
                       {secondPlace.Driver.givenName}{' '}
                       {secondPlace.Driver.familyName}
                     </h2>
-
                     <p className="podium-team">
                       {secondPlace.Constructors[0]?.name ?? '-'}
                     </p>
-
-                    <p className="podium-points">
-                      {secondPlace.points} pts
-                    </p>
+                    <p className="podium-points">{secondPlace.points} pts</p>
                   </div>
-
-                  <div className="podium-block podium-block-second">
-                    2
-                  </div>
+                  <div className="podium-block podium-block-second">2</div>
                 </div>
 
                 <div className="podium-place podium-first">
                   <div className="podium-card">
                     <span className="podium-medal">🥇</span>
-
                     {firstPlace.imageUrl && (
                       <img
                         src={firstPlace.imageUrl}
@@ -160,30 +267,21 @@ function HomePage({ onBack }: HomePageProps) {
                         className="podium-driver-image"
                       />
                     )}
-
                     <h2>
                       {firstPlace.Driver.givenName}{' '}
                       {firstPlace.Driver.familyName}
                     </h2>
-
                     <p className="podium-team">
                       {firstPlace.Constructors[0]?.name ?? '-'}
                     </p>
-
-                    <p className="podium-points">
-                      {firstPlace.points} pts
-                    </p>
+                    <p className="podium-points">{firstPlace.points} pts</p>
                   </div>
-
-                  <div className="podium-block podium-block-first">
-                    1
-                  </div>
+                  <div className="podium-block podium-block-first">1</div>
                 </div>
 
                 <div className="podium-place podium-third">
                   <div className="podium-card">
                     <span className="podium-medal">🥉</span>
-
                     {thirdPlace.imageUrl && (
                       <img
                         src={thirdPlace.imageUrl}
@@ -191,34 +289,22 @@ function HomePage({ onBack }: HomePageProps) {
                         className="podium-driver-image"
                       />
                     )}
-
                     <h2>
                       {thirdPlace.Driver.givenName}{' '}
                       {thirdPlace.Driver.familyName}
                     </h2>
-
                     <p className="podium-team">
                       {thirdPlace.Constructors[0]?.name ?? '-'}
                     </p>
-
-                    <p className="podium-points">
-                      {thirdPlace.points} pts
-                    </p>
+                    <p className="podium-points">{thirdPlace.points} pts</p>
                   </div>
-
-                  <div className="podium-block podium-block-third">
-                    3
-                  </div>
+                  <div className="podium-block podium-block-third">3</div>
                 </div>
               </section>
             )}
 
-            {/* Full standings table */}
             <section className="full-standings">
-              <h2 className="full-standings-heading">
-                Full standings
-              </h2>
-
+              <h2 className="full-standings-heading">Full standings</h2>
               <div className="standings-table-wrap">
                 <table className="standings-table">
                   <thead>
@@ -231,7 +317,6 @@ function HomePage({ onBack }: HomePageProps) {
                       <th scope="col">Points</th>
                     </tr>
                   </thead>
-
                   <tbody>
                     {standings.map((standing) => (
                       <tr key={standing.Driver.familyName}>
@@ -244,28 +329,25 @@ function HomePage({ onBack }: HomePageProps) {
                             standing.position !== '3' &&
                             standing.position}
                         </td>
-
                         <td className="driver-name">
                           <span className="driver-number">
                             {standing.Driver.permanentNumber ??
                               standing.Driver.code ??
                               '-'}
                           </span>
-
                           {standing.Driver.givenName}{' '}
                           {standing.Driver.familyName}
                         </td>
-
-                        <td>
-                          {standing.Constructors[0]?.name ?? '-'}
-                        </td>
-
+                        <td>{standing.Constructors[0]?.name ?? '-'}</td>
                         <td>{standing.Driver.nationality}</td>
-
                         <td>{standing.wins}</td>
-
                         <td className="standings-points">
-                          {standing.points}
+                          <span
+                            className="points-badge"
+                            style={getTeamStyle(standing.teamColour)}
+                          >
+                            {standing.points}
+                          </span>
                         </td>
                       </tr>
                     ))}
@@ -280,4 +362,4 @@ function HomePage({ onBack }: HomePageProps) {
   )
 }
 
-export default HomePage
+export default DriversPage

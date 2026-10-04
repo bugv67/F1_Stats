@@ -153,6 +153,62 @@ body {
   outline-offset: 4px;
 }
 
+.home-section-list {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  width: min(860px, calc(100vw - 96px));
+  margin-top: 32px;
+}
+
+.hero .home-section-button {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  min-height: 72px;
+  margin: 0;
+  padding: 14px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-left: 4px solid var(--red);
+  background: rgba(21, 21, 30, 0.94);
+  color: var(--white);
+  text-align: left;
+  clip-path: none;
+  transform: none;
+}
+
+.hero .home-section-button:hover {
+  background: var(--red);
+  color: var(--white);
+  transform: translateY(-3px);
+}
+
+.home-section-button:focus-visible {
+  outline: 3px solid var(--white);
+  outline-offset: 3px;
+}
+
+.home-section-number {
+  color: #ff625d;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 18px;
+  font-weight: 900;
+}
+
+.home-section-name {
+  flex: 1;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 22px;
+  font-style: italic;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.home-section-arrow {
+  font-size: 20px;
+}
+
 .standings-page {
   min-height: 100vh;
   background: #f3f2ef;
@@ -203,6 +259,41 @@ body {
 .back-button:focus-visible {
   outline: 2px solid var(--white);
   outline-offset: 4px;
+}
+
+.drivers-nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.drivers-view-toggle {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  background: var(--asphalt-light);
+}
+
+.drivers-view-toggle button {
+  padding: 9px 14px;
+  border: 0;
+  background: transparent;
+  color: var(--white);
+  font: 500 14px 'Barlow', sans-serif;
+  cursor: pointer;
+}
+
+.drivers-view-toggle button:hover:not(.is-active) {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.drivers-view-toggle button.is-active {
+  background: var(--red);
+}
+
+.drivers-view-toggle button:focus-visible {
+  outline: 2px solid var(--white);
+  outline-offset: 2px;
 }
 
 .standings-content {
@@ -330,6 +421,18 @@ body {
   .standings-navbar {
     min-height: 68px;
     padding: 14px 20px;
+    flex-wrap: wrap;
+    row-gap: 12px;
+  }
+
+  .drivers-nav-actions {
+    width: 100%;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .drivers-view-toggle button {
+    padding: 8px 10px;
   }
 
   .standings-content {
@@ -345,6 +448,16 @@ body {
   .standings-table td {
     padding-right: 12px;
     padding-left: 12px;
+  }
+
+  .home-section-list {
+    grid-template-columns: 1fr;
+    width: calc(100vw - 48px);
+    margin-top: 26px;
+  }
+
+  .home-section-button {
+    min-height: 62px;
   }
 }
 /* =========================
@@ -608,4 +721,179 @@ body {
   .podium-block-third {
     height: 44px;
   }
+}
+/* =========================
+   Driver flip cards
+   ========================= */
+
+.drivers-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 20px;
+  margin-top: 30px;
+}
+
+/* The card is a <button>, so we reset the browser's default button look */
+.driver-card {
+  width: 100%;
+  height: 340px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--asphalt);
+  font: inherit;
+  text-align: center;
+  cursor: pointer;
+  perspective: 1000px;
+}
+
+.driver-card:focus-visible {
+  outline: 3px solid var(--team-colour);
+  outline-offset: 4px;
+}
+
+.driver-card-inner {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  transition: transform 0.6s;
+  transform-style: preserve-3d;
+}
+
+.driver-card-face {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px 16px;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  box-shadow: 0 10px 24px rgba(21, 21, 30, 0.12);
+}
+
+.driver-card-front {
+  background: var(--white);
+  border-top: 6px solid var(--team-colour);
+}
+
+.driver-card-back {
+  background: var(--team-colour);
+  color: var(--team-text);
+  transform: rotateY(180deg);
+  gap: 18px;
+}
+
+/* Hover devices (mouse): flip on hover or keyboard focus */
+@media (hover: hover) {
+  .driver-card:hover .driver-card-inner,
+  .driver-card:focus-visible .driver-card-inner {
+    transform: rotateY(180deg);
+  }
+}
+
+/* Touch devices: flip on tap (the button toggles .is-flipped) */
+@media (hover: none) {
+  .driver-card.is-flipped .driver-card-inner {
+    transform: rotateY(180deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .driver-card-inner {
+    transition: none;
+  }
+}
+
+/* Front face */
+.driver-card-image {
+  display: block;
+  width: 130px;
+  height: 130px;
+  margin-bottom: 14px;
+  object-fit: contain;
+}
+
+.driver-card-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--team-colour);
+  color: var(--team-text);
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 48px;
+  font-style: italic;
+  font-weight: 900;
+}
+
+.driver-card-name {
+  font-size: 19px;
+  font-weight: 700;
+  line-height: 1.15;
+}
+.driver-card-medal {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  font-size: 28px;
+  line-height: 1;
+}
+
+.driver-card-number {
+  margin-top: 10px;
+  padding: 2px 12px;
+  background: var(--team-colour);
+  color: var(--team-text);
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 22px;
+  font-style: italic;
+  font-weight: 900;
+  transform: skewX(-12deg);
+}
+
+.driver-card-team {
+  margin-top: 10px;
+  font-size: 14px;
+  opacity: 0.75;
+}
+
+/* Back face */
+.driver-card-back-team {
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.driver-card-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.driver-card-stat-label {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.8;
+}
+
+.driver-card-stat-value {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 48px;
+  font-style: italic;
+  font-weight: 900;
+  line-height: 1;
+}
+
+/* Points cell in the standings table */
+.points-badge {
+  display: inline-block;
+  min-width: 52px;
+  padding: 4px 10px;
+  border-radius: 4px;
+  background: var(--team-colour);
+  color: var(--team-text);
+  text-align: center;
 }
