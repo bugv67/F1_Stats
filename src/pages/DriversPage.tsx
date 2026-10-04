@@ -4,7 +4,7 @@ import {
   SEASON,
   type DriverStanding,
 } from '../api/jolpica'
-import { getDrivers } from '../api/openf1'
+import { getDrivers, type OpenF1Driver } from '../api/openf1'
 
 interface DriversPageProps {
   onBack: () => void
@@ -15,9 +15,56 @@ interface DriverWithImage extends DriverStanding {
   teamColour: string
 }
 
+interface DriverCardProps {
+  driver: DriverWithImage
+}
+
 type DriversView = 'drivers' | 'standings'
 
 const FALLBACK_TEAM_COLOUR = 'e10600'
+
+const MEDALS: Record<string, string> = { '1': '🥇', '2': '🥈', '3': '🥉' }
+
+// Lower-cases a name and removes accents, so 'Pérez' and 'Perez' are equal.
+function normalizeName(name: string): string {
+  return name
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+}
+
+// Finds the OpenF1 driver that matches a driver from Jolpica.
+// Tries three ways, in order, and returns the first match:
+// 1. the driver's number
+// 2. the three-letter code (e.g. VER)
+// 3. the family name (ignoring accents)
+function findOpenF1Driver(
+  driver: DriverStanding['Driver'],
+  openF1Drivers: OpenF1Driver[],
+): OpenF1Driver | undefined {
+  const byNumber = openF1Drivers.find(
+    (openF1Driver) =>
+      openF1Driver.driver_number.toString() === driver.permanentNumber,
+  )
+  if (byNumber) {
+    return byNumber
+  }
+
+  const byCode = driver.code
+    ? openF1Drivers.find(
+        (openF1Driver) => openF1Driver.name_acronym === driver.code,
+      )
+    : undefined
+  if (byCode) {
+    return byCode
+  }
+
+  return openF1Drivers.find(
+    (openF1Driver) =>
+      normalizeName(openF1Driver.last_name) ===
+      normalizeName(driver.familyName),
+  )
+}
 
 // Turns a team colour from OpenF1 (HEX without '#') into CSS variables:
 // --team-colour: the team's colour
@@ -37,11 +84,6 @@ function getTeamStyle(teamColour: string): CSSProperties {
     '--team-text': brightness > 150 ? '#15151e' : '#ffffff',
   } as CSSProperties
 }
-
-interface DriverCardProps {
-  driver: DriverWithImage
-}
-const MEDALS: Record<string, string> = { '1': '🥇', '2': '🥈', '3': '🥉' }
 
 function DriverCard({ driver }: DriverCardProps) {
   const [flipped, setFlipped] = useState(false)
@@ -115,17 +157,11 @@ function DriversPage({ onBack }: DriversPageProps) {
 
     Promise.all([getDriverStandings(), getDrivers()])
       .then(([driverStandings, openF1Drivers]) => {
-        const driversWithImages = driverStandings.map((driver) => {
-          const driverNumber =
-            driver.Driver.permanentNumber ?? driver.Driver.code
-
-          const driverInfo = openF1Drivers.find(
-            (openF1Driver) =>
-              openF1Driver.driver_number.toString() === driverNumber,
-          )
+        const driversWithImages = driverStandings.map((standing) => {
+          const driverInfo = findOpenF1Driver(standing.Driver, openF1Drivers)
 
           return {
-            ...driver,
+            ...standing,
             imageUrl: driverInfo?.headshot_url ?? '',
             teamColour: driverInfo?.team_colour ?? '',
           }

@@ -3,7 +3,10 @@ const API_URL = 'https://api.openf1.org/v1/drivers'
 export interface OpenF1Driver {
   driver_number: number
   full_name: string
-  headshot_url: string
+  first_name: string
+  last_name: string
+  name_acronym: string
+  headshot_url: string | null
   team_name: string
   team_colour: string
 }
