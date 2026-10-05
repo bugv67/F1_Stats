@@ -1,52 +1,48 @@
-import { useEffect, useState } from 'react'
-import HomePage from './pages/HomePage'
+import { useState } from 'react'
+import DriversPage from './pages/DriversPage'
+import RacesPage from './pages/RacesPage'
+import HomeHub from './pages/HomeHub'
 import './App.css'
 
+type Section = 'home' | 'drivers' | 'races' | 'constructors'
 
 function App() {
-  const [lit, setLit] = useState(0)
-  const [showDrivers, setShowDrivers] = useState(false)
+  const [section, setSection] = useState<Section>('home')
 
-  useEffect(() => {
-    const id = setInterval(() => setLit((l) => (l + 1) % 8), 600)
-    return () => clearInterval(id)
-  }, [])
-
-  if (showDrivers) {
-    return <HomePage onBack={() => setShowDrivers(false)} />
+  if (section === 'drivers') {
+    return <DriversPage onBack={() => setSection('home')} />
   }
 
-  return (
-    <div className="home-page">
-      <header className="navbar">
-        <h2>
-          <span>🏎</span>F1 Stats
-        </h2>
-      </header>
+  if (section === 'races') {
+    return <RacesPage onBack={() => setSection('home')} />
+  }
 
-      <main className="hero">
-        <div className="start-lights" aria-hidden="true">
-          {[1, 2, 3, 4, 5].map((n) => (
-            <i key={n} className={n <= lit ? 'on' : ''} />
-          ))}
-        </div>
+  if (section === 'constructors') {
+    return (
+      <div className="standings-page">
+        <header className="standings-navbar">
+          <p className="standings-brand">
+            <span aria-hidden="true">F1</span> Stats
+          </p>
 
-        <h1>
-          F1
-          <br />
-          Stats
-        </h1>
+          <button
+            className="back-button"
+            onClick={() => setSection('home')}
+          >
+            Back to home
+          </button>
+        </header>
 
-        <p>
-          Formula 1 statistics, standings and race information in one place.
-        </p>
+        <main className="standings-content">
+          <p className="standings-eyebrow">Constructors</p>
+          <h1 className="standings-heading">Constructors</h1>
+          <p className="standings-summary">Coming soon.</p>
+        </main>
+      </div>
+    )
+  }
 
-        <button onClick={() => setShowDrivers(true)}>Explore the season</button>
-      </main>
-
-      <div className="checker" aria-hidden="true" />
-    </div>
-  )
+  return <HomeHub onSelectSection={setSection} />
 }
 
 export default App
