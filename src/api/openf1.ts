@@ -1,4 +1,4 @@
-const API_URL = 'https://api.openf1.org/v1/drivers'
+const BASE_URL = 'https://api.openf1.org/v1'
 
 export interface OpenF1Driver {
   driver_number: number
@@ -11,14 +11,37 @@ export interface OpenF1Driver {
   team_colour: string
 }
 
+export interface OpenF1Meeting {
+  meeting_key: number
+  meeting_name: string
+  circuit_short_name: string
+  circuit_image: string | null
+  country_flag: string | null
+  date_start: string
+  date_end: string
+}
+
 export async function getDrivers() {
-  const response = await fetch(`${API_URL}?session_key=latest`)
+  const response = await fetch(`${BASE_URL}/drivers?session_key=latest`)
 
   if (!response.ok) {
     throw new Error(`OpenF1 request failed: ${response.status}`)
   }
 
   const data: OpenF1Driver[] = await response.json()
+
+  return data
+}
+
+// All the race weekends ("meetings") of a season, in one request.
+export async function getMeetings(year: number) {
+  const response = await fetch(`${BASE_URL}/meetings?year=${year}`)
+
+  if (!response.ok) {
+    throw new Error(`OpenF1 request failed: ${response.status}`)
+  }
+
+  const data: OpenF1Meeting[] = await response.json()
 
   return data
 }
